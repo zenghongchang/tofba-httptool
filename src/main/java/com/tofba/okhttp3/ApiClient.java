@@ -2,7 +2,6 @@ package com.tofba.okhttp3;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URLConnection;
@@ -19,8 +18,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.net.ssl.KeyManager;
 
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.OffsetDateTime;
@@ -58,8 +55,6 @@ public class ApiClient {
     private String tempFolderPath = null;
     private Map<String, Authentication> authentications;
     private DateFormat dateFormat;
-    private InputStream sslCaCert;
-    private KeyManager[] keyManagers;
     private boolean verifyingSsl;
     private OkHttpClient httpClient;
     private JSON json;
@@ -159,44 +154,7 @@ public class ApiClient {
         this.verifyingSsl = verifyingSsl;
         return this;
     }
-
-    /**
-     * Get SSL CA cert.
-     *
-     * @return Input stream to the SSL CA cert
-     */
-    public InputStream getSslCaCert() {
-        return sslCaCert;
-    }
-
-    /**
-     * Configure the CA certificate to be trusted when making https requests.
-     * Use null to reset to default.
-     *
-     * @param sslCaCert input stream for SSL CA cert
-     * @return ApiClient
-     */
-    public ApiClient setSslCaCert(InputStream sslCaCert) {
-        this.sslCaCert = sslCaCert;
-        return this;
-    }
-
-    public KeyManager[] getKeyManagers() {
-        return keyManagers;
-    }
-
-    /**
-     * Configure client keys to use for authorization in an SSL session.
-     * Use null to reset to default.
-     *
-     * @param managers The KeyManagers to use
-     * @return ApiClient
-     */
-    public ApiClient setKeyManagers(KeyManager[] managers) {
-        this.keyManagers = managers;
-        return this;
-    }
-
+    
     public DateFormat getDateFormat() {
         return dateFormat;
     }
@@ -788,25 +746,22 @@ public class ApiClient {
     @SuppressWarnings("unchecked")
     public <T> void executeAsync(Call call, final Type returnType, final ApiCallback<T> callback) {
         call.enqueue(new Callback() {
-            
             @Override
             public void onResponse(Call arg0, Response response)
                 throws IOException {
                 T result;
                 try {
-                    result = (T) handleResponse(response, returnType);
+                    result = (T)handleResponse(response, returnType);
                 } catch (ApiException e) {
                     callback.onFailure(e, response.code(), response.headers().toMultimap());
                     return;
                 }
                 callback.onSuccess(result, response.code(), response.headers().toMultimap());
-                
             }
             
             @Override
             public void onFailure(Call arg0, IOException e) {
                 callback.onFailure(new ApiException(e), 0, null);
-                
             }
         });
     }
@@ -863,7 +818,6 @@ public class ApiClient {
      */
     public Call buildCall(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String[] authNames, ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Request request = buildRequest(path, method, queryParams, collectionQueryParams, body, headerParams, formParams, authNames, progressRequestListener);
-
         return httpClient.newCall(request);
     }
 
@@ -924,17 +878,20 @@ public class ApiClient {
     }
 
     /**
-     * Build full URL by concatenating base path, the given sub path and query parameters.
-     *
-     * @param path The sub path
-     * @param queryParams The query parameters
-     * @param collectionQueryParams The collection query parameters
-     * @return The full URL
+     * 
+     * <strong>URL构建</strong>
+     * 
+     * @param path
+     * @param queryParams
+     * @param collectionQueryParams
+     * @return
+     * @author Henry(fba02)
+     * @version [版本号, 2021-2-9]
+     * @see [类、类#方法、类#成员]
      */
     public String buildUrl(String path, List<Pair> queryParams, List<Pair> collectionQueryParams) {
         final StringBuilder url = new StringBuilder();
         url.append(basePath).append(path);
-
         if (queryParams != null && !queryParams.isEmpty()) {
             // support (constant) query string in `path`, e.g. "/posts?draft=1"
             String prefix = path.contains("?") ? "&" : "?";
@@ -951,7 +908,6 @@ public class ApiClient {
                 }
             }
         }
-
         if (collectionQueryParams != null && !collectionQueryParams.isEmpty()) {
             String prefix = url.toString().contains("?") ? "&" : "?";
             for (Pair param : collectionQueryParams) {
@@ -968,7 +924,6 @@ public class ApiClient {
                 }
             }
         }
-
         return url.toString();
     }
 
@@ -1005,10 +960,14 @@ public class ApiClient {
     }
 
     /**
-     * Build a form-encoding request body with the given form parameters.
-     *
-     * @param formParams Form parameters in the form of Map
-     * @return RequestBody
+     * 
+     * <strong>Form表单请求。</strong>
+     * 
+     * @param formParams
+     * @return
+     * @author Henry(fba02)
+     * @version [版本号, 2021-2-9]
+     * @see [类、类#方法、类#成员]
      */
     public RequestBody buildRequestBodyFormEncoding(Map<String, Object> formParams) {
         FormBody.Builder builder = new FormBody.Builder();
@@ -1017,12 +976,16 @@ public class ApiClient {
         }
         return builder.build();
     }
-
+    
     /**
-     * Build a multipart (file uploading) request body with the given form parameters, which could contain text fields and file fields.
-     *
-     * @param formParams Form parameters in the form of Map
-     * @return RequestBody
+     * 
+     * <strong>Build a multipart (file uploading) request body with the given form parameters, which could contain text fields and file fields.</strong>
+     * 
+     * @param formParams
+     * @return
+     * @author Henry(fba02)
+     * @version [版本号, 2021-2-9]
+     * @see [类、类#方法、类#成员]
      */
     @SuppressWarnings("deprecation")
     public RequestBody buildRequestBodyMultipart(Map<String, Object> formParams) {
@@ -1042,10 +1005,14 @@ public class ApiClient {
     }
 
     /**
-     * Guess Content-Type header from the given file (defaults to "application/octet-stream").
-     *
-     * @param file The given file
-     * @return The guessed Content-Type
+     * 
+     * <strong> 设置文件 contentType 默认："application/octet-stream"</strong>
+     * 
+     * @param file
+     * @return
+     * @author Henry(fba02)
+     * @version [版本号, 2021-2-9]
+     * @see [类、类#方法、类#成员]
      */
     public String guessContentTypeFromFile(File file) {
         String contentType = URLConnection.guessContentTypeFromName(file.getName());
