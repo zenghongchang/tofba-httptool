@@ -46,7 +46,7 @@ public class Demo {
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public Call getMarketplaceParticipationsCall(final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener)
+    public Call call(final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener)
         throws ApiException {
         Object localVarPostBody = null;
         String localVarPath = "/api/amoebaSubjects";
@@ -80,7 +80,7 @@ public class Demo {
     public static void main(String[] args)
         throws ApiException {
         Demo demo = new Demo();
-        Call call = demo.getMarketplaceParticipationsCall(null, null);
+        Call call = demo.call(null, null);
         Type localVarReturnType = new TypeToken<Object>() {
         }.getType();
         demo.apiClient.execute(call, localVarReturnType);        

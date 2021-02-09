@@ -49,20 +49,19 @@ import okio.BufferedSink;
 import okio.Okio;
 
 public class ApiClient {
-    private String basePath = "";
-    private boolean debugging = false;
-    private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
-    private String tempFolderPath = null;
-    private Map<String, Authentication> authentications;
+    private String basePath = null;// 请求URL根路径 
+    private String tempFolderPath = null;// 文件下载目录
+    private boolean debugging = false;//     
+    private boolean verifyingSsl = true;// 启用HTTPS    
+    private Map<String, String> defaultHeaderMap = new HashMap<String, String>();// 请求头信息
+    private Map<String, Authentication> authentications;// 身份认证信息
     private DateFormat dateFormat;
-    private boolean verifyingSsl;
     private OkHttpClient httpClient;
     private JSON json;
     private HttpLoggingInterceptor loggingInterceptor;
 
     public ApiClient() {
         httpClient = new OkHttpClient();
-        verifyingSsl = true;
         json = new JSON();        
         setUserAgent("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36");
         authentications = new HashMap<String, Authentication>();
